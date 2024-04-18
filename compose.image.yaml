@@ -1,0 +1,38 @@
+version: '3.4'
+services:
+  weaviate:
+    command:
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8080'
+    - --scheme
+    - http
+    image: cr.weaviate.io/semitechnologies/weaviate:1.24.8
+    ports:
+    - 8080:8080
+    - 50051:50051
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 20
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: "./data"
+      ENABLE_MODULES: 'img2vec-neural'
+      DEFAULT_VECTORIZER_MODULE: 'img2vec-neural'
+      IMAGE_INFERENCE_API: "http://i2v-neural:8080"
+      CLUSTER_HOSTNAME: 'node1'
+  i2v-neural:
+    image: cr.weaviate.io/semitechnologies/img2vec-pytorch:resnet50
+  notebook:
+    image: jupyter/base-notebook:latest
+    command:
+    - start-notebook.sh
+    - --NotebookApp.token='' # 認証を無効化
+    - --NotebookApp.disable_check_xsrf=True # CSRFチェックを無効化
+    ports:
+    - 8888:8888
+    volumes:
+    - ./notebook:/home/jovyan/work
+    - ./data:/home/jovyan/data
+    environment:
+      - OPENAI_APIKEY
